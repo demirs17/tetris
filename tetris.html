@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-color: #444;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #score-table{
+            color: white;
+            font-size: 20px;
+        }
+        #container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-auto-rows: 1fr;
+            grid-gap: 0px;
+        }
+        .grid-item {
+            background-color: #eee;
+            border-width: 4px;
+            border-color: #eee;
+            border-style: outset;
+            width: 30px;
+            height: 30px;
+            /* box-shadow: inset 0 3px 6px rgba(0,0,0,0.16), 0 4px 6px rgba(0,0,0,0.45); */
+            /* border-radius: 5px; */
+        }
+    </style>
+</head>
+<body>
+    <div id="score-table">Score: <span id="score">0</span></div>
+    <div id="container">
+    </div>
+
+    <script>
+        var shapes = [
+            [4,14,15],
+            [3,4,5,6],
+            // [4,5,15],
+            // [4,5,14],
+            // [5,15,14],
+            // [4,14,24,34],
+            // [4,14,24,25],
+            // [4,5,14,15],
+            // [4,14,24,15],
+            // [5,15,25,14],
+        ];
+
+
+        // her şeklin sağa döndüğün de kordinatlarının + kaç ta olacağını gösteren array
+
+
+
+        var cellsBgColor = "#eee"
+        var gameWidth = 10;
+        var score = 0;
+        var gameHeight = 15;
+        var container = document.getElementById("container");
+        var cells = [];
+        var cellDivs = [];
+        for(var i = 0;i<gameWidth * gameHeight;i++){
+            var cell = document.createElement("div");
+            cell.classList.add("grid-item");
+            // cell.innerText = i.toString();
+            cells.push(false);
+            cellDivs.push(cell);
+            container.appendChild(cell);
+        }
+
+        var donunce = [
+            [
+                [1, -1 * gameWidth, -1],
+                [gameWidth, 1, -1 * gameWidth],
+                [-1, gameWidth, +1],
+                [-1 * gameWidth, -1, gameWidth]
+            ],
+            [
+                [1, gameWidth, 2 * gameWidth - 1, 3 * gameWidth - 2],
+                [-1, -1 * gameWidth, -2 * gameWidth + 1, -3 * gameWidth + 2],
+                [1, gameWidth, 2 * gameWidth - 1, 3 * gameWidth - 2],
+                [-1, -1 * gameWidth, -2 * gameWidth + 1, -3 * gameWidth + 2],
+            ]
+        ];
+
+        var falling = null;
+        var fallingIndex = null;
+        var donmeIndex = 0;
+        var stopInterval = false;
+
+
+        document.addEventListener('keydown', function(event) {
+            if(falling !== null){
+                if (event.key === "ArrowLeft") {
+                    var hepsininSoluBos = true;
+                    for(var i = 0;i<falling.length;i++){
+                        if(falling[i] % 10 != 0 ? cells[falling[i] - 1] !== false : true){
+                            hepsininSoluBos = false;
+                        }
+                    }
+                    if(hepsininSoluBos){
+                        for(var j = 0;j<falling.length;j++){
+                            falling[j] -= 1;
+                        }
+                        boya();
+                    }
+                }
+                else if (event.key === "ArrowRight") {
+                    var hepsininSagiBos = true;
+                    for(var i = 0;i<falling.length;i++){
+                        if((falling[i] % 10 != 9 ? cells[falling[i] + 1] !== false : true) || cells[falling[i] + 1] === true){
+                            hepsininSagiBos = false;
+                        }
+                    }
+                    if(hepsininSagiBos){
+                        for(var j = 0;j<falling.length;j++){
+                            falling[j] += 1;
+                        }
+                        boya();
+                    }
+                }
+                else if (event.key === "ArrowDown") {
+                    var hepsininAltiBos = true;
+                    for(var i = 0;i<falling.length;i++){
+                        if(cells[falling[i] + gameWidth] === true || (falling[i]>=gameWidth*gameHeight - 10 && falling[i]<=gameWidth*gameHeight)){
+                            hepsininAltiBos = false;
+                        }
+                    }
+                    if(hepsininAltiBos){
+                        for(var j = 0;j<falling.length;j++){
+                            falling[j] += gameWidth;
+                        }
+                        boya();
+                    }else{
+                        for(var i = 0;i<falling.length;i++){
+                            cells[falling[i]] = true;
+                        }
+                        falling = null;
+                        donmeIndex = 0;
+                    }
+                }
+                else if (event.key == "ArrowUp"){
+                    sekliBirTurDondur(1);
+                }
+            }
+        });
+
+        function interval(){
+            if(!stopInterval){
+                if(falling === null){
+                    var random = Math.floor(Math.random() * shapes.length);
+                    falling = [...shapes[random]];
+                    fallingIndex = random;
+                    var hepsininYeriBos = true;
+                    for(var i = 0;i<falling.length;i++){
+                        if(cells[falling[i]] === true){
+                            // cellDivs[falling[i]].style.backgroundColor = "red";
+                            hepsininYeriBos = false;
+                        }
+                    }
+                    if(!hepsininYeriBos){
+                        alert("score: " + score);
+                    }
+                }
+                else{
+                    var hepsininAltiBos = true;
+                    for(var j = 0;j<falling.length;j++){
+                        if(cells[falling[j] + gameWidth] === true || (falling[j]>=gameWidth*gameHeight - 10 && falling[j]<=gameWidth*gameHeight)){
+                            hepsininAltiBos = false;
+                        }
+                    }
+                    if(hepsininAltiBos){
+                        for(var g = 0;g<falling.length;g++){
+                            falling[g] += gameWidth;
+                        }
+                    }
+                    else{
+                        for(var i = 0;i<falling.length;i++){
+                            cells[falling[i]] = true;
+                        }
+                        falling = null;
+                        donmeIndex = 0;
+                        return;
+                    }
+                }
+                boya();
+                siraTamamMi();
+            }
+        }
+        
+        function boya(){
+            for(var k = 0;k<cellDivs.length;k++){
+                if(cells[k] !== true){
+                    cellDivs[k].style.backgroundColor = cellsBgColor;
+                    cellDivs[k].style.borderColor = cellsBgColor;
+                }
+                else{
+                    cellDivs[k].style.backgroundColor = "brown";
+                    cellDivs[k].style.borderColor = "brown";
+                }
+            }
+            for(var i = 0;i<falling.length;i++){
+                cellDivs[falling[i]].style.backgroundColor = "red";
+                cellDivs[falling[i]].style.borderColor = "red";
+            }
+        }
+
+        function siraTamamMi(){
+            for(var i = gameHeight - 1;i>0;i--){
+                var hepsiTrue = true;
+                var sira = [];
+                for(var j = 0;j<gameWidth;j++){
+                    sira.push(i * gameWidth + j);
+                    if(cells[i * gameWidth + j] === false){
+                        hepsiTrue = false;
+                    }
+                }
+                if(hepsiTrue){
+                    score += 1;
+                    document.getElementById("score").innerText = score.toString();
+                    for(var j = 0;j<sira.length;j++){
+                        // cellDivs[sira[j]].style.backgroundColor = "green";
+                        cells[sira[j]] = false;
+                    }
+
+                    for(var t = sira[0];t>0;t--){
+                        if(cells[t] === true){
+                            // cellDivs[t].style.backgroundColor = "green";
+                            cells[t] = false;
+                            cells[t + gameWidth] = true;
+                        }
+                    }
+                    boya();
+                }
+            }
+        }
+
+        function sekliBirTurDondur(yon){
+            if(yon == 1){
+                var sinirda = false;
+                for(var i = 0;i<falling.length;i++){
+                    var mutlak = (falling[i] % 10 - (falling[i] + donunce[fallingIndex][donmeIndex][i])%10) < 0 ? -1 * (falling[i] % 10 - (falling[i] + donunce[fallingIndex][donmeIndex][i])%10) : falling[i] % 10 - (falling[i] + donunce[fallingIndex][donmeIndex][i])%10;
+                    if(mutlak > 3){
+                        sinirda = true;
+                    }else if((falling[i] + donunce[fallingIndex][donmeIndex][i]) > gameWidth * gameHeight - 1){
+                        sinirda = true;
+                    }else if(cells[(falling[i] + donunce[fallingIndex][donmeIndex][i])] === true){
+                        sinirda = true;
+                    }
+                }
+                if(!sinirda){
+                    for(var i = 0;i<falling.length;i++){
+                        falling[i] += donunce[fallingIndex][donmeIndex][i];
+                    }
+                    donmeIndex = donmeIndex == 3 ? 0 : donmeIndex+1;
+                }
+                boya();
+            }
+        }
+
+        interval();
+        setInterval(interval, 500);
+    </script>
+</body>
+</html>
